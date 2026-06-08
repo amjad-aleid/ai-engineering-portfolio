@@ -1,4 +1,4 @@
-import anthropic
+from groq import Groq
 
 from retrieval.search import SearchResult
 
@@ -23,25 +23,19 @@ def _build_context(results: list[SearchResult]) -> str:
 def ask(
     question: str,
     search_results: list[SearchResult],
-    client: anthropic.Anthropic,
-    model: str = "claude-sonnet-4-6",
+    client: Groq,
+    model: str = "llama-3.3-70b-versatile",
 ) -> tuple[str, list[SearchResult]]:
     context = _build_context(search_results)
     user_message = f"Context from research papers:\n\n{context}\n\nQuestion: {question}"
 
-    # Cache the system prompt to reduce cost on repeated queries
-    response = client.messages.create(
+    response = client.chat.completions.create(
         model=model,
         max_tokens=1024,
-        system=[
-            {
-                "type": "text",
-                "text": _SYSTEM_PROMPT,
-                "cache_control": {"type": "ephemeral"},
-            }
+        messages=[
+            {"role": "system", "content": _SYSTEM_PROMPT},
+            {"role": "user", "content": user_message},
         ],
-        messages=[{"role": "user", "content": user_message}],
-        extra_headers={"anthropic-beta": "prompt-caching-2024-07-31"},
     )
 
-    return response.content[0].text, search_results
+    return response.choices[0].message.content, search_results

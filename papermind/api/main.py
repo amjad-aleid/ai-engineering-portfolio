@@ -2,7 +2,7 @@ import os
 import tempfile
 from pathlib import Path
 
-import anthropic
+from groq import Groq
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from pydantic import BaseModel
@@ -19,7 +19,7 @@ app = FastAPI(title="PaperMind API")
 
 embedder = Embedder()
 searcher = Searcher()
-claude = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+claude = Groq(api_key=os.environ["GROQ_API_KEY"])
 
 
 class QueryRequest(BaseModel):
