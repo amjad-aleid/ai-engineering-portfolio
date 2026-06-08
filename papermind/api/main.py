@@ -11,6 +11,7 @@ from generation.rag import ask
 from ingestion.chunker import chunk_pages
 from ingestion.embedder import Embedder
 from ingestion.parser import parse_pdf
+from retrieval.reranker import Reranker
 from retrieval.search import Searcher
 
 load_dotenv()
@@ -19,6 +20,7 @@ app = FastAPI(title="PaperMind API")
 
 embedder = Embedder()
 searcher = Searcher()
+reranker = Reranker()
 claude = Groq(api_key=os.environ["GROQ_API_KEY"])
 
 
@@ -83,6 +85,7 @@ def query(request: QueryRequest):
     if not results:
         raise HTTPException(404, "No relevant content found")
 
+    results = reranker.rerank(request.question, results, top_k=3)
     answer, used = ask(request.question, results, claude)
 
     citations = [

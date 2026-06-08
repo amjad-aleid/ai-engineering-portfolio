@@ -7,7 +7,7 @@ A RAG-powered research paper assistant. Upload academic PDFs, ask questions, get
 ```
 PDF → parse → chunk → embed → ChromaDB
                                   ↓
-         User question → embed → search → Groq (Llama 3.3 70B) → answer + citations
+User question → embed → search → rerank → Groq (Llama 3.3 70B) → answer + citations
 ```
 
 ## Tooling decisions
@@ -33,6 +33,12 @@ Python's standard framework for building APIs. Chosen for its automatic request/
 ### Streamlit
 Turns Python scripts into interactive web UIs with almost no frontend code. The right tool for AI demos and portfolio projects where the goal is showing the capability, not building a production frontend.
 
+### Cross-encoder reranker (`ms-marco-MiniLM-L6-v2`)
+A second-pass ranking model that scores each (question, chunk) pair together, catching relevance that cosine similarity alone misses. Runs locally after the initial vector search, improving answer quality without extra API calls.
+
+### Evaluation harness (`eval/evaluate.py`)
+Uses the LLM to generate test Q&A pairs from an ingested paper, then measures two things: retrieval recall (did the right chunks come back?) and answer faithfulness (is the generated answer grounded in the source?). Produces a scored report per paper.
+
 ## Running locally
 
 ```bash
@@ -53,3 +59,8 @@ streamlit run frontend/app.py
 ```
 
 Open http://localhost:8501 in your browser.
+
+```bash
+# Run the evaluation harness on an ingested paper
+python eval/evaluate.py <paper_id>
+```
