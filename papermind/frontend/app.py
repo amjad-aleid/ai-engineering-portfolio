@@ -40,7 +40,7 @@ for msg in st.session_state.messages:
         if "citations" in msg:
             with st.expander(f"{len(msg['citations'])} source(s)"):
                 for c in msg["citations"]:
-                    st.markdown(f"**{c['filename']}** — Page {c['page_number']} (score: {c['score']})")
+                    st.markdown(f"**{c['filename']}** — Page {c['page_number']}, Paragraph {c['paragraph_number']} (score: {c['score']})")
                     st.caption(c["excerpt"])
 
 if question := st.chat_input("Ask a question about your papers..."):
@@ -60,7 +60,7 @@ if question := st.chat_input("Ask a question about your papers..."):
             st.markdown(data["answer"])
             with st.expander(f"{len(data['citations'])} source(s)"):
                 for c in data["citations"]:
-                    st.markdown(f"**{c['filename']}** — Page {c['page_number']} (score: {c['score']})")
+                    st.markdown(f"**{c['filename']}** — Page {c['page_number']}, Paragraph {c['paragraph_number']} (score: {c['score']})")
                     st.caption(c["excerpt"])
 
             st.session_state.messages.append({

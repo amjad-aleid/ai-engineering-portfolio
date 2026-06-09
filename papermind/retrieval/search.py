@@ -13,6 +13,7 @@ class SearchResult:
     score: float
     paper_id: str
     page_number: int
+    paragraph_number: int
     filename: str
 
 
@@ -52,6 +53,7 @@ class Searcher:
                     score=round(1 - distance, 4),
                     paper_id=meta.get("paper_id", ""),
                     page_number=meta.get("page_number", 0),
+                    paragraph_number=meta.get("paragraph_number", 0),
                     filename=meta.get("filename", ""),
                 )
             )

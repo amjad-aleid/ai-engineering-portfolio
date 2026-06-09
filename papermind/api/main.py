@@ -33,6 +33,7 @@ class QueryRequest(BaseModel):
 class Citation(BaseModel):
     filename: str
     page_number: int
+    paragraph_number: int
     excerpt: str
     score: float
 
@@ -92,6 +93,7 @@ def query(request: QueryRequest):
         Citation(
             filename=r.filename,
             page_number=r.page_number,
+            paragraph_number=r.paragraph_number,
             excerpt=r.text[:200] + "..." if len(r.text) > 200 else r.text,
             score=r.score,
         )

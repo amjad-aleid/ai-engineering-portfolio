@@ -14,7 +14,7 @@ Guidelines:
 
 def _build_context(results: list[SearchResult]) -> str:
     parts = [
-        f"[Source: {r.filename}, Page {r.page_number}]\n{r.text}"
+        f"[Source: {r.filename}, Page {r.page_number}, Paragraph {r.paragraph_number}]\n{r.text}"
         for r in results
     ]
     return "\n\n---\n\n".join(parts)
