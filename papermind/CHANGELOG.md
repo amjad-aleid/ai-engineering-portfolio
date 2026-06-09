@@ -4,6 +4,12 @@ All notable changes to PaperMind are listed here, most recent first.
 
 ---
 
+## [0.7.0] - 2026-06-09
+### Changed
+- Added `make dev-all` and `make prod-all` targets to start API and frontend together with a single command. Ctrl+C stops both processes cleanly.
+
+---
+
 ## [0.6.0] - 2026-06-09
 ### Added
 - Environment-specific config system using `pydantic-settings` (`config.py`)
