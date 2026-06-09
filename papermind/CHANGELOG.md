@@ -4,6 +4,18 @@ All notable changes to PaperMind are listed here, most recent first.
 
 ---
 
+## [0.6.0] - 2026-06-09
+### Added
+- Environment-specific config system using `pydantic-settings` (`config.py`)
+- `.env.development` and `.env.production` config files with per-environment values
+- `Makefile` with `dev`, `prod`, `frontend`, `ingest`, and `eval` targets
+- CORS middleware on the API, driven by config
+- Structured logging across the API, driven by config log level
+- `/health` endpoint for deployment health checks
+- All components (ChromaDB path, model name, retrieval settings) now driven by config
+
+---
+
 ## [0.5.0] - 2026-06-08
 ### Added
 - Paragraph-level citation tracking — answers now cite file, page number, and paragraph number

@@ -9,17 +9,15 @@ Usage:
     python eval/evaluate.py <paper_id>
 """
 import json
-import os
 import sys
 
-from dotenv import load_dotenv
 from groq import Groq
 
+from config import get_settings
 from retrieval.reranker import Reranker
 from retrieval.search import Searcher
 
-load_dotenv()
-
+settings = get_settings()
 _N_QUESTIONS = 5
 
 
@@ -29,7 +27,7 @@ def generate_questions(paper_id: str, client: Groq, searcher: Searcher) -> list[
     context = "\n\n".join(r.text for r in results)
 
     response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
+        model=settings.groq_model,
         max_tokens=1024,
         messages=[
             {
@@ -55,7 +53,7 @@ def generate_questions(paper_id: str, client: Groq, searcher: Searcher) -> list[
 def check_faithfulness(question: str, answer: str, context: str, client: Groq) -> float:
     """Ask the LLM to rate how faithful the answer is to the retrieved context (0.0–1.0)."""
     response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
+        model=settings.groq_model,
         max_tokens=50,
         messages=[
             {
@@ -81,8 +79,8 @@ def check_faithfulness(question: str, answer: str, context: str, client: Groq) -
 
 
 def evaluate(paper_id: str) -> None:
-    client = Groq(api_key=os.environ["GROQ_API_KEY"])
-    searcher = Searcher()
+    client = Groq(api_key=settings.groq_api_key)
+    searcher = Searcher(persist_dir=settings.chroma_db_path)
     reranker = Reranker()
 
     print(f"\nGenerating {_N_QUESTIONS} test questions for paper: {paper_id}")
@@ -96,11 +94,9 @@ def evaluate(paper_id: str) -> None:
         question = pair["question"]
         expected_answer = pair["answer"]
 
-        # Retrieve then rerank
-        raw_results = searcher.search(question, paper_ids=[paper_id], top_k=10)
-        reranked = reranker.rerank(question, raw_results, top_k=3)
+        raw_results = searcher.search(question, paper_ids=[paper_id], top_k=settings.retrieval_top_k)
+        reranked = reranker.rerank(question, raw_results, top_k=settings.rerank_top_k)
 
-        # Retrieval recall: did any top-3 chunk contain keywords from the expected answer?
         answer_keywords = set(expected_answer.lower().split())
         hit = any(
             len(answer_keywords & set(r.text.lower().split())) >= 3
@@ -109,7 +105,6 @@ def evaluate(paper_id: str) -> None:
         if hit:
             retrieval_hits += 1
 
-        # Answer faithfulness
         context = "\n\n".join(r.text for r in reranked)
         faithfulness = check_faithfulness(question, expected_answer, context, client)
         faithfulness_scores.append(faithfulness)
