@@ -67,29 +67,44 @@ cp .env.example .env
 
 > **Note:** PDFs must have a text layer (not scanned images). Papers from [arxiv.org](https://arxiv.org) always work.
 
+## Make commands
+
+All common tasks are available as `make` commands defined in `Makefile` at the root of this project. Run them from the `papermind/` directory.
+
+| Command | Description |
+|---|---|
+| `make install` | Create `.venv` and install all dependencies |
+| `make dev-all` | Start API + frontend together in development mode (recommended) |
+| `make prod-all` | Start API + frontend together in production mode |
+| `make dev` | Start the API only in development mode |
+| `make prod` | Start the API only in production mode |
+| `make frontend` | Start the Streamlit frontend only |
+| `make ingest ARGS="paper.pdf"` | Ingest one or more PDFs into the vector index |
+| `make eval ARGS="paper_id"` | Run the evaluation harness on an ingested paper |
+
+`Ctrl+C` on `make dev-all` or `make prod-all` stops both the API and frontend cleanly.
+
+To run in production mode, prefix with `APP_ENV=production`:
+```bash
+make ingest ARGS="paper.pdf" APP_ENV=production
+make eval ARGS="my_paper" APP_ENV=production
+```
+
 ## Running the app
 
-PaperMind has two processes that must both be running: the backend API and the frontend UI.
-
-**Terminal 1 — Backend API**
+Start everything with one command:
 ```bash
-uvicorn api.main:app --reload
+make dev-all
 ```
-The API starts at http://localhost:8000. Visit http://localhost:8000/docs for an interactive API explorer.
-
-**Terminal 2 — Frontend UI**
-```bash
-streamlit run frontend/app.py
-```
-Open http://localhost:8501 in your browser. Use the sidebar to upload PDFs and the chat input to ask questions.
+This starts the backend API at http://localhost:8000 and the frontend UI at http://localhost:8501. Visit http://localhost:8000/docs for an interactive API explorer.
 
 ## Ingesting papers via CLI
 
-You can also ingest PDFs directly from the terminal without using the UI:
+Ingest PDFs directly from the terminal without using the UI:
 
 ```bash
-python ingest.py path/to/paper.pdf
-python ingest.py papers/*.pdf    # ingest multiple at once
+make ingest ARGS="path/to/paper.pdf"
+make ingest ARGS="papers/*.pdf"    # ingest multiple at once
 ```
 
 The paper ID (used to filter queries) is the filename without the `.pdf` extension.
@@ -99,7 +114,7 @@ The paper ID (used to filter queries) is the filename without the `.pdf` extensi
 Once a paper is ingested, run the evaluation harness to measure retrieval and answer quality:
 
 ```bash
-python eval/evaluate.py <paper_id>
+make eval ARGS="<paper_id>"
 ```
 
 This will:
