@@ -28,12 +28,18 @@ dev-all: kill
 	@trap 'kill $$(jobs -p)' EXIT; \
 	APP_ENV=development .venv/bin/uvicorn api.main:app \
 		--host 127.0.0.1 --port 8000 --reload & \
+	echo "Waiting for API..."; \
+	until curl -sf http://localhost:8000/health > /dev/null 2>&1; do sleep 1; done; \
+	echo "API ready."; \
 	APP_ENV=development .venv/bin/streamlit run frontend/app.py
 
 prod-all: kill
 	@trap 'kill $$(jobs -p)' EXIT; \
 	APP_ENV=production .venv/bin/uvicorn api.main:app \
 		--host 0.0.0.0 --port 8000 --workers 4 & \
+	echo "Waiting for API..."; \
+	until curl -sf http://localhost:8000/health > /dev/null 2>&1; do sleep 1; done; \
+	echo "API ready."; \
 	APP_ENV=production .venv/bin/streamlit run frontend/app.py
 
 # --- Ingest PDFs (pass files via ARGS) ---

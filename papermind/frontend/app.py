@@ -26,8 +26,12 @@ with st.sidebar:
 
     st.divider()
 
-    papers_res = requests.get(f"{API_URL}/papers")
-    papers = papers_res.json().get("papers", []) if papers_res.ok else []
+    try:
+        papers_res = requests.get(f"{API_URL}/papers", timeout=3)
+        papers = papers_res.json().get("papers", []) if papers_res.ok else []
+    except requests.exceptions.ConnectionError:
+        st.warning("API is not reachable. Run `make dev-all` to start the backend.")
+        papers = []
     selected = st.multiselect("Search in (leave empty for all)", papers)
 
 # --- Chat interface ---

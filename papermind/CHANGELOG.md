@@ -4,6 +4,13 @@ All notable changes to PaperMind are listed here, most recent first.
 
 ---
 
+## [0.9.0] - 2026-06-09
+### Fixed
+- `make dev-all` and `make prod-all` now wait for the API health check to pass before launching Streamlit, preventing connection errors on startup
+- Frontend handles API connection errors gracefully with a warning message instead of crashing
+
+---
+
 ## [0.8.0] - 2026-06-09
 ### Changed
 - `make dev`, `make prod`, `make dev-all`, `make prod-all`, and `make frontend` now kill any existing uvicorn/streamlit processes before starting
