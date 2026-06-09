@@ -4,6 +4,13 @@ All notable changes to PaperMind are listed here, most recent first.
 
 ---
 
+## [0.8.0] - 2026-06-09
+### Changed
+- `make dev`, `make prod`, `make dev-all`, `make prod-all`, and `make frontend` now kill any existing uvicorn/streamlit processes before starting
+- Added standalone `make kill` target to stop all running processes
+
+---
+
 ## [0.7.0] - 2026-06-09
 ### Changed
 - Added `make dev-all` and `make prod-all` targets to start API and frontend together with a single command. Ctrl+C stops both processes cleanly.

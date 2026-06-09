@@ -1,31 +1,36 @@
-.PHONY: install dev prod dev-all prod-all frontend ingest eval
+.PHONY: install dev prod dev-all prod-all frontend ingest eval kill
 
 install:
 	python3 -m venv .venv
 	.venv/bin/pip install -r requirements.txt
 
+# --- Kill any running API or frontend processes ---
+kill:
+	@pkill -f "uvicorn api.main:app" 2>/dev/null && echo "Stopped uvicorn" || true
+	@pkill -f "streamlit run frontend/app.py" 2>/dev/null && echo "Stopped streamlit" || true
+
 # --- Development ---
-dev:
+dev: kill
 	APP_ENV=development .venv/bin/uvicorn api.main:app \
 		--host 127.0.0.1 --port 8000 --reload
 
 # --- Production ---
-prod:
+prod: kill
 	APP_ENV=production .venv/bin/uvicorn api.main:app \
 		--host 0.0.0.0 --port 8000 --workers 4
 
 # --- Frontend (works in both envs) ---
-frontend:
+frontend: kill
 	APP_ENV=$(or $(APP_ENV),development) .venv/bin/streamlit run frontend/app.py
 
 # --- Start API + frontend together (Ctrl+C stops both) ---
-dev-all:
+dev-all: kill
 	@trap 'kill $$(jobs -p)' EXIT; \
 	APP_ENV=development .venv/bin/uvicorn api.main:app \
 		--host 127.0.0.1 --port 8000 --reload & \
 	APP_ENV=development .venv/bin/streamlit run frontend/app.py
 
-prod-all:
+prod-all: kill
 	@trap 'kill $$(jobs -p)' EXIT; \
 	APP_ENV=production .venv/bin/uvicorn api.main:app \
 		--host 0.0.0.0 --port 8000 --workers 4 & \
