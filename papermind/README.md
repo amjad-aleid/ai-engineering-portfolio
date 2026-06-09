@@ -74,15 +74,16 @@ All common tasks are available as `make` commands defined in `Makefile` at the r
 | Command | Description |
 |---|---|
 | `make install` | Create `.venv` and install all dependencies |
-| `make dev-all` | Start API + frontend together in development mode (recommended) |
-| `make prod-all` | Start API + frontend together in production mode |
-| `make dev` | Start the API only in development mode |
-| `make prod` | Start the API only in production mode |
-| `make frontend` | Start the Streamlit frontend only |
+| `make dev-all` | Kill any running processes, then start API + frontend in development mode (recommended) |
+| `make prod-all` | Kill any running processes, then start API + frontend in production mode |
+| `make dev` | Kill any running processes, then start the API only in development mode |
+| `make prod` | Kill any running processes, then start the API only in production mode |
+| `make frontend` | Kill any running processes, then start the Streamlit frontend only |
+| `make kill` | Stop all running API and frontend processes |
 | `make ingest ARGS="paper.pdf"` | Ingest one or more PDFs into the vector index |
 | `make eval ARGS="paper_id"` | Run the evaluation harness on an ingested paper |
 
-`Ctrl+C` on `make dev-all` or `make prod-all` stops both the API and frontend cleanly.
+All run commands automatically kill any existing processes before starting fresh — no need to manually stop anything first. `Ctrl+C` on `make dev-all` or `make prod-all` stops both the API and frontend cleanly.
 
 To run in production mode, prefix with `APP_ENV=production`:
 ```bash
