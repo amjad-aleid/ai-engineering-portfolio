@@ -1,0 +1,84 @@
+import json
+import os
+import sys
+
+from dotenv import load_dotenv
+from groq import Groq
+
+from tools import TOOL_SCHEMAS, TOOLS
+
+load_dotenv()
+
+MODEL = "llama-3.3-70b-versatile"
+
+SYSTEM_PROMPT = (
+    "You are a research assistant with two kinds of tools: a securities screener "
+    "for stocks and ETFs (P/E ratio, dividend yield, expense ratio, and trailing "
+    "5-year price growth), and GitHub repository search/lookup. Use the tools "
+    "whenever the user asks about specific investments, screening criteria, or "
+    "GitHub projects. When reporting screener results, mention the actual figures "
+    "returned by the tool rather than estimating them yourself."
+)
+
+
+def run_agent(client: Groq, user_input: str) -> str:
+    messages = [
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "user", "content": user_input},
+    ]
+
+    while True:
+        response = client.chat.completions.create(
+            model=MODEL,
+            messages=messages,
+            tools=TOOL_SCHEMAS,
+        )
+        message = response.choices[0].message
+        messages.append(message.model_dump(exclude_none=True))
+
+        if not message.tool_calls:
+            return message.content or "(no response text)"
+
+        for call in message.tool_calls:
+            name = call.function.name
+            args = json.loads(call.function.arguments)
+
+            print(f"[tool] {name}({args})")
+            try:
+                result = TOOLS[name]["handler"](**args)
+                content = json.dumps(result)
+            except Exception as exc:
+                content = json.dumps({"error": str(exc)})
+
+            messages.append({"role": "tool", "tool_call_id": call.id, "content": content})
+
+
+def main():
+    if not os.environ.get("GROQ_API_KEY"):
+        sys.exit("Set GROQ_API_KEY in your environment or .env file")
+
+    client = Groq()
+    print("AI Research Agent — ask about stocks/ETFs or GitHub repos. Type 'exit' to quit.")
+
+    while True:
+        try:
+            user_input = input("\n> ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print()
+            break
+
+        if not user_input:
+            continue
+        if user_input.lower() in {"exit", "quit"}:
+            break
+
+        try:
+            reply = run_agent(client, user_input)
+        except Exception as exc:
+            reply = f"Error: {exc}"
+
+        print(f"\n{reply}")
+
+
+if __name__ == "__main__":
+    main()
