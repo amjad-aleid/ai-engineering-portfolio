@@ -4,6 +4,14 @@ All notable changes to AI Research Agent are listed here, most recent first.
 
 ---
 
+## [0.5.0] - 2026-06-15
+### Changed
+- `calculate_returns` and `compare_securities` results are now formatted as aligned ASCII tables in the terminal using `tabulate`, printed immediately after the tool executes — column widths and alignment are handled in Python, not by the LLM
+
+## [0.4.0] - 2026-06-15
+### Changed
+- `years` parameter in `calculate_returns` is now optional — defaults to `[1, 3, 5]` when not specified; any custom list (e.g. `[1, 5, 10]`) is still accepted
+
 ## [0.3.0] - 2026-06-15
 ### Added
 - `calculate_returns` tool — dynamic investment calculator: given a list of symbols, a dollar amount, and one or more year periods, computes total return %, gain/loss, and ending portfolio value per symbol per period using live Yahoo Finance price history

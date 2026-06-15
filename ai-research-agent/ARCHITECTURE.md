@@ -71,7 +71,7 @@ The `while True` loop in `agent.py` handles this naturally: each iteration can r
 
 | Component | Role |
 |---|---|
-| `agent.py` | CLI entry point. Holds the system prompt, the agentic `while` loop, and dispatches `tool_calls` to `TOOLS[name]["handler"]` |
+| `agent.py` | CLI entry point. Holds the system prompt, the agentic `while` loop, and dispatches `tool_calls` to `TOOLS[name]["handler"]`. Also contains `print_tool_table()` — formats `calculate_returns` and `compare_securities` results as aligned ASCII tables using `tabulate` before the LLM reply is printed |
 | `tools/__init__.py` | `TOOLS` — registry mapping tool name → `{description, parameters, handler}`. `TOOL_SCHEMAS` — OpenAI-style `{"type": "function", "function": {...}}` definitions passed to `chat.completions.create(tools=...)` |
 | `tools/securities.py` | `screen_securities()` — runs a `yfinance` screener query (`EquityQuery`/`ETFQuery`) for candidates, then fetches `Ticker(symbol).info` per candidate for P/E, dividend yield, expense ratio (ETFs), and historical growth; filters and returns matches. `compare_securities()` — given a list of symbols, fetches `.info` and 5yr price history per symbol to produce expense ratio, dividend yield, and 1/3/5-year total returns for side-by-side comparison. `calculate_returns()` — given symbols, a dollar investment, and a list of year periods, fetches price history and computes total return %, gain/loss, and end value per symbol per period |
 | `tools/github.py` | `search_github_repos()`, `get_github_repo()` — thin wrappers over the GitHub REST API |
@@ -87,9 +87,9 @@ ai-research-agent/
 ├── agent.py             # entry point: system prompt, agentic loop, CLI
 ├── tools/
 │   ├── __init__.py       # TOOLS registry + TOOL_SCHEMAS (OpenAI-style function defs)
-│   ├── securities.py     # screen_securities, compare_securities (Yahoo Finance via yfinance, no key)
+│   ├── securities.py     # screen_securities, compare_securities, calculate_returns (Yahoo Finance via yfinance, no key)
 │   └── github.py         # search_github_repos, get_github_repo
-├── requirements.txt      # groq, requests, python-dotenv, yfinance, pandas
+├── requirements.txt      # groq, requests, python-dotenv, yfinance, pandas, tabulate
 ├── .env.example          # GROQ_API_KEY, GITHUB_TOKEN
 └── .gitignore
 ```

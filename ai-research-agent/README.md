@@ -6,9 +6,12 @@ The third project in this portfolio's progression. [`mcp-from-scratch`](../mcp-f
 
 An agent = a model + a set of tools + a loop where the model decides, on its own, when and how to call those tools and how to use the results. This agent has two tool groups:
 
-- **`screen_securities`** — screens stocks or ETFs by P/E ratio, dividend yield, expense ratio (ETFs), and historical growth, via [Yahoo Finance](https://finance.yahoo.com/) (`yfinance`) — no API key required
+**Securities tools** (all powered by Yahoo Finance — no API key required):
+- **`screen_securities`** — screens stocks or ETFs by P/E ratio, dividend yield, expense ratio (ETFs), and historical growth
 - **`compare_securities`** — fetches expense ratio, dividend yield, and 1/3/5-year price performance for a list of specific symbols, for side-by-side comparison
-- **`calculate_returns`** — calculates what a fixed dollar investment would be worth today if made 1, 2, 3 (or any set of) years ago, across multiple symbols
+- **`calculate_returns`** — calculates what a fixed dollar investment would be worth today if made 1, 3, 5 (or any set of) years ago, across multiple symbols; results printed as an aligned terminal table
+
+**GitHub tools:**
 - **`search_github_repos`** / **`get_github_repo`** — searches and inspects GitHub repositories via the GitHub REST API
 
 You chat with it on the command line; it decides which tool(s) to call (if any) and reasons over the results to answer you.
@@ -45,6 +48,11 @@ Unlike Financial Modeling Prep and Alpha Vantage, `yfinance` needs **no API key 
 `screen_securities` first runs a screener query to find a candidate pool (filtering on exchange/market cap/sector for stocks, or region/expense-ratio for ETFs), then fetches `yf.Ticker(symbol).info` per candidate to apply the remaining filters and pull the final metrics. Keep `limit` modest (default 5, max 10) since each candidate is a separate lookup. Data quality varies by symbol — some ETFs report a `0.0` expense ratio when Yahoo simply doesn't have that field populated.
 
 `compare_securities` skips the screener entirely — given a list of symbols, it fetches `.info` plus 5 years of price history per symbol, and computes 1/3/5-year total returns from the actual close prices (works the same way for stocks and ETFs, unlike the asset-type-dependent "historical growth" in `screen_securities`).
+
+`calculate_returns` takes the same price-history approach but applies a dollar investment amount, returning total return %, gain/loss, and end value per symbol per period. Defaults to 1/3/5-year periods; pass any list (e.g. `[1, 5, 10]`) for a custom view.
+
+### Terminal table formatting (`tabulate`)
+`compare_securities` and `calculate_returns` results are formatted as aligned ASCII tables directly in `agent.py` using `tabulate`, rather than relying on the LLM to format them. This gives consistent column alignment regardless of symbol count or period length.
 
 ### GitHub REST API
 Free and unauthenticated for light use (60 requests/hour). Set `GITHUB_TOKEN` in `.env` to use an authenticated token instead (5000 requests/hour) — optional.
@@ -101,6 +109,6 @@ Each tool call the agent makes is printed (`[tool] name(args)`) before its resul
 |---|---|---|
 | `screen_securities` | `asset_type` ("stock"/"etf"), `sector?`, `max_pe?`, `min_dividend_yield?`, `max_expense_ratio?`, `min_historical_growth?`, `limit?` | Screens stocks/ETFs by P/E, dividend yield, expense ratio, and historical growth |
 | `compare_securities` | `symbols` (list of tickers) | Compares specific symbols on expense ratio, dividend yield, and 1/3/5-year price performance |
-| `calculate_returns` | `symbols`, `investment` ($), `years` (list of ints) | Calculates end value, gain/loss, and total return % for a fixed investment across multiple symbols and time periods |
+| `calculate_returns` | `symbols`, `investment` ($), `years?` (default `[1,3,5]`) | Calculates end value, gain/loss, and total return % for a fixed investment across multiple symbols and time periods — printed as an aligned table |
 | `search_github_repos` | `query`, `language?`, `limit?` | Searches GitHub repositories by keyword |
 | `get_github_repo` | `owner`, `repo` | Gets stars, forks, issues, license, etc. for a repository |
