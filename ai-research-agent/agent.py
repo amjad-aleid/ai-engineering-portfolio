@@ -21,7 +21,11 @@ SYSTEM_PROMPT = (
     "and GitHub repository search/lookup. Use the tools whenever the user asks "
     "about specific investments, screening criteria, comparisons between tickers, "
     "hypothetical investment calculations, or GitHub projects. When reporting "
-    "results, always use the actual figures returned by the tool."
+    "results, always use the actual figures returned by the tool. "
+    "Always present calculate_returns and compare_securities results as a markdown "
+    "table. For calculate_returns, use symbols as rows and time periods as columns. "
+    "Include dollar gain/loss and end value in the table. Keep any commentary "
+    "brief and below the table."
 )
 
 
