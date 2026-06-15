@@ -4,6 +4,7 @@ import sys
 
 from dotenv import load_dotenv
 from groq import Groq
+from tabulate import tabulate
 
 from tools import TOOL_SCHEMAS, TOOLS
 
@@ -22,11 +23,73 @@ SYSTEM_PROMPT = (
     "about specific investments, screening criteria, comparisons between tickers, "
     "hypothetical investment calculations, or GitHub projects. When reporting "
     "results, always use the actual figures returned by the tool. "
-    "Always present calculate_returns and compare_securities results as a markdown "
-    "table. For calculate_returns, use symbols as rows and time periods as columns. "
-    "Include dollar gain/loss and end value in the table. Keep any commentary "
-    "brief and below the table."
+    "Tables for calculate_returns and compare_securities are already printed "
+    "directly to the terminal — do NOT reproduce the data in your reply. "
+    "Just add a brief commentary below."
 )
+
+
+def _fmt_pct(value) -> str:
+    if value is None:
+        return "—"
+    return f"+{value:.2f}%" if value >= 0 else f"{value:.2f}%"
+
+
+def _fmt_usd(value, sign=False) -> str:
+    if value is None:
+        return "—"
+    if value < 0:
+        return f"-${abs(value):,.0f}"
+    return f"+${value:,.0f}" if sign else f"${value:,.0f}"
+
+
+def print_tool_table(name: str, result) -> None:
+    """Pretty-print calculate_returns and compare_securities results as aligned tables."""
+    if name == "calculate_returns" and isinstance(result, list):
+        rows = []
+        headers = None
+        for item in result:
+            if "error" in item:
+                rows.append([item["symbol"], "ERROR", item["error"], "", ""])
+                continue
+            for period, data in item.get("periods", {}).items():
+                if data is None:
+                    continue
+                if headers is None:
+                    headers = ["Symbol", "Name", "Period", "Return %", "Gain / Loss", "End Value"]
+                rows.append([
+                    item["symbol"],
+                    (item.get("name") or "")[:28],
+                    period,
+                    _fmt_pct(data["total_return_pct"]),
+                    _fmt_usd(data["gain_loss"], sign=True),
+                    _fmt_usd(data["end_value"]),
+                ])
+        if rows and headers:
+            print()
+            print(tabulate(rows, headers=headers, tablefmt="simple", colalign=("left", "left", "left", "right", "right", "right")))
+
+    elif name == "compare_securities" and isinstance(result, list):
+        rows = []
+        headers = ["Symbol", "Name", "Price", "Exp. Ratio", "Div. Yield", "1y Return", "3y Return", "5y Return"]
+        for item in result:
+            if "error" in item:
+                rows.append([item["symbol"], "ERROR"] + [""] * 6)
+                continue
+            perf = item.get("historical_performance_pct", {})
+            rows.append([
+                item["symbol"],
+                (item.get("name") or "")[:28],
+                _fmt_usd(item.get("price"), sign=False),
+                f"{item['expense_ratio_pct']:.4f}%" if item.get("expense_ratio_pct") is not None else "—",
+                _fmt_pct(item.get("dividend_yield_pct")),
+                _fmt_pct(perf.get("1y")),
+                _fmt_pct(perf.get("3y")),
+                _fmt_pct(perf.get("5y")),
+            ])
+        if rows:
+            print()
+            print(tabulate(rows, headers=headers, tablefmt="simple", colalign=("left", "left", "right", "right", "right", "right", "right", "right")))
 
 
 def run_agent(client: Groq, user_input: str) -> str:
@@ -54,6 +117,7 @@ def run_agent(client: Groq, user_input: str) -> str:
             print(f"[tool] {name}({args})")
             try:
                 result = TOOLS[name]["handler"](**args)
+                print_tool_table(name, result)
                 content = json.dumps(result)
             except Exception as exc:
                 content = json.dumps({"error": str(exc)})
