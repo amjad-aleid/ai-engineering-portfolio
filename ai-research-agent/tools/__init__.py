@@ -71,10 +71,10 @@ TOOLS = {
                 "years": {
                     "type": "array",
                     "items": {"type": "integer"},
-                    "description": "List of lookback periods in years, e.g. [1, 2, 3] or [5].",
+                    "description": "Lookback periods in years, e.g. [1, 5, 10]. Defaults to [1, 3, 5].",
                 },
             },
-            "required": ["symbols", "investment", "years"],
+            "required": ["symbols", "investment"],
         },
         "handler": securities.calculate_returns,
     },

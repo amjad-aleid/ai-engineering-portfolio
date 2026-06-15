@@ -113,7 +113,7 @@ def compare_securities(symbols: list[str]) -> list[dict]:
 def calculate_returns(
     symbols: list[str],
     investment: float,
-    years: list[int],
+    years: list[int] | None = None,
 ) -> list[dict]:
     """Calculate what a fixed investment would be worth today if made 1, 3, 5
     (or any set of) years ago, for each symbol. Uses live Yahoo Finance price
@@ -122,6 +122,8 @@ def calculate_returns(
     Returns one entry per symbol with a breakdown per time period showing
     total return %, gain/loss in dollars, and ending portfolio value.
     """
+    if years is None:
+        years = [1, 3, 5]
     max_years = max(years)
     results = []
 
