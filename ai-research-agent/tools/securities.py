@@ -1,3 +1,4 @@
+import pandas as pd
 import yfinance as yf
 
 US_EXCHANGES = ["NMS", "NYQ", "ASE"]
@@ -78,6 +79,60 @@ def screen_securities(
             break
 
     return results
+
+
+def compare_securities(symbols: list[str]) -> list[dict]:
+    """Fetch expense ratio, dividend yield, and historical price performance
+    (1/3/5-year total returns) for a list of stock or ETF symbols, for
+    side-by-side comparison. Uses live Yahoo Finance data (via yfinance) -
+    no API key required.
+    """
+    results = []
+    for symbol in symbols:
+        try:
+            ticker = yf.Ticker(symbol)
+            info = ticker.info
+        except Exception as exc:
+            results.append({"symbol": symbol, "error": str(exc)})
+            continue
+
+        results.append(
+            {
+                "symbol": symbol,
+                "name": info.get("longName") or info.get("shortName"),
+                "price": info.get("regularMarketPrice") or info.get("navPrice"),
+                "expense_ratio_pct": info.get("netExpenseRatio"),
+                "dividend_yield_pct": info.get("dividendYield"),
+                "historical_performance_pct": _historical_performance_pct(ticker),
+            }
+        )
+
+    return results
+
+
+def _historical_performance_pct(ticker: "yf.Ticker") -> dict:
+    """Total price return (%) over the trailing 1, 3, and 5 years."""
+    history = ticker.history(period="5y")
+    closes = history["Close"] if not history.empty else None
+    if closes is None or len(closes) < 2:
+        return {}
+
+    latest_date, latest_price = closes.index[-1], closes.iloc[-1]
+    earliest_date, earliest_price = closes.index[0], closes.iloc[0]
+    performance = {}
+    for label, years in (("1y", 1), ("3y", 3), ("5y", 5)):
+        cutoff = latest_date - pd.DateOffset(years=years)
+        past_prices = closes[closes.index <= cutoff]
+        if not past_prices.empty:
+            past_price = past_prices.iloc[-1]
+        elif (cutoff - earliest_date) <= pd.Timedelta(days=10):
+            # "5y" of data is often a few days short of a full 5 years - close enough
+            past_price = earliest_price
+        else:
+            continue
+        if past_price > 0:
+            performance[label] = round((latest_price / past_price - 1) * 100, 2)
+    return performance
 
 
 def _historical_growth_pct(asset_type: str, info: dict) -> float | None:

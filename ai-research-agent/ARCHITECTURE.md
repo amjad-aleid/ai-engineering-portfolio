@@ -73,7 +73,7 @@ The `while True` loop in `agent.py` handles this naturally: each iteration can r
 |---|---|
 | `agent.py` | CLI entry point. Holds the system prompt, the agentic `while` loop, and dispatches `tool_calls` to `TOOLS[name]["handler"]` |
 | `tools/__init__.py` | `TOOLS` — registry mapping tool name → `{description, parameters, handler}`. `TOOL_SCHEMAS` — OpenAI-style `{"type": "function", "function": {...}}` definitions passed to `chat.completions.create(tools=...)` |
-| `tools/securities.py` | `screen_securities()` — runs a `yfinance` screener query (`EquityQuery`/`ETFQuery`) for candidates, then fetches `Ticker(symbol).info` per candidate for P/E, dividend yield, expense ratio (ETFs), and historical growth; filters and returns matches |
+| `tools/securities.py` | `screen_securities()` — runs a `yfinance` screener query (`EquityQuery`/`ETFQuery`) for candidates, then fetches `Ticker(symbol).info` per candidate for P/E, dividend yield, expense ratio (ETFs), and historical growth; filters and returns matches. `compare_securities()` — given a list of symbols, fetches `.info` and 5yr price history per symbol to produce expense ratio, dividend yield, and 1/3/5-year total returns for side-by-side comparison |
 | `tools/github.py` | `search_github_repos()`, `get_github_repo()` — thin wrappers over the GitHub REST API |
 
 Tool errors (bad API key, symbol not found, rate limit) raise `ValueError` from the handler; `agent.py` catches this, serializes `{"error": "..."}` as the tool message content, and lets the model explain the failure to the user instead of the program crashing.
@@ -87,9 +87,9 @@ ai-research-agent/
 ├── agent.py             # entry point: system prompt, agentic loop, CLI
 ├── tools/
 │   ├── __init__.py       # TOOLS registry + TOOL_SCHEMAS (OpenAI-style function defs)
-│   ├── securities.py     # screen_securities (Yahoo Finance via yfinance, no key)
+│   ├── securities.py     # screen_securities, compare_securities (Yahoo Finance via yfinance, no key)
 │   └── github.py         # search_github_repos, get_github_repo
-├── requirements.txt      # groq, requests, python-dotenv, yfinance
+├── requirements.txt      # groq, requests, python-dotenv, yfinance, pandas
 ├── .env.example          # GROQ_API_KEY, GITHUB_TOKEN
 └── .gitignore
 ```

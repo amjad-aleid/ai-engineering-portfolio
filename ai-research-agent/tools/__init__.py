@@ -49,6 +49,25 @@ TOOLS = {
         },
         "handler": securities.screen_securities,
     },
+    "compare_securities": {
+        "description": (
+            "Fetch expense ratio, dividend yield, and historical price performance "
+            "(1/3/5-year total returns) for a list of stock or ETF ticker symbols, "
+            "for side-by-side comparison. Returns live data per symbol."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "symbols": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Ticker symbols to compare, e.g. ['AAPL', 'MSFT', 'GOOGL'].",
+                },
+            },
+            "required": ["symbols"],
+        },
+        "handler": securities.compare_securities,
+    },
     "search_github_repos": {
         "description": "Search GitHub repositories by keyword, optionally filtered by programming language.",
         "parameters": {

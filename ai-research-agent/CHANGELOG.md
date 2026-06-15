@@ -4,6 +4,12 @@ All notable changes to AI Research Agent are listed here, most recent first.
 
 ---
 
+## [0.2.0] - 2026-06-15
+### Added
+- `compare_securities` tool — fetches live expense ratio, dividend yield, and 1/3/5-year price returns for a list of specified symbols, enabling side-by-side comparison without relying on model training data
+
+---
+
 ## [0.1.0] - 2026-06-14
 ### Added
 - Initial project scaffold
