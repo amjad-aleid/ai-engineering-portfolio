@@ -110,6 +110,74 @@ def compare_securities(symbols: list[str]) -> list[dict]:
     return results
 
 
+def calculate_returns(
+    symbols: list[str],
+    investment: float,
+    years: list[int],
+) -> list[dict]:
+    """Calculate what a fixed investment would be worth today if made 1, 3, 5
+    (or any set of) years ago, for each symbol. Uses live Yahoo Finance price
+    history (adjusted closes = total return including dividends).
+
+    Returns one entry per symbol with a breakdown per time period showing
+    total return %, gain/loss in dollars, and ending portfolio value.
+    """
+    max_years = max(years)
+    results = []
+
+    for symbol in symbols:
+        try:
+            ticker = yf.Ticker(symbol)
+            history = ticker.history(period=f"{max_years + 1}y")
+            info = ticker.info
+        except Exception as exc:
+            results.append({"symbol": symbol, "error": str(exc)})
+            continue
+
+        closes = history["Close"] if not history.empty else None
+        if closes is None or len(closes) < 2:
+            results.append({"symbol": symbol, "error": "No price history available"})
+            continue
+
+        latest_date = closes.index[-1]
+        latest_price = closes.iloc[-1]
+        earliest_date = closes.index[0]
+        earliest_price = closes.iloc[0]
+
+        periods = {}
+        for y in sorted(years):
+            cutoff = latest_date - pd.DateOffset(years=y)
+            past_prices = closes[closes.index <= cutoff]
+
+            if not past_prices.empty:
+                past_price = past_prices.iloc[-1]
+            elif (cutoff - earliest_date) <= pd.Timedelta(days=10):
+                past_price = earliest_price
+            else:
+                periods[f"{y}y"] = None
+                continue
+
+            if past_price > 0:
+                total_return_pct = round((latest_price / past_price - 1) * 100, 2)
+                gain_loss = round(investment * total_return_pct / 100, 2)
+                periods[f"{y}y"] = {
+                    "total_return_pct": total_return_pct,
+                    "gain_loss": gain_loss,
+                    "end_value": round(investment + gain_loss, 2),
+                }
+
+        results.append(
+            {
+                "symbol": symbol,
+                "name": info.get("longName") or info.get("shortName"),
+                "investment": investment,
+                "periods": periods,
+            }
+        )
+
+    return results
+
+
 def _historical_performance_pct(ticker: "yf.Ticker") -> dict:
     """Total price return (%) over the trailing 1, 3, and 5 years."""
     history = ticker.history(period="5y")

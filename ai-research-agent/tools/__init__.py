@@ -49,6 +49,35 @@ TOOLS = {
         },
         "handler": securities.screen_securities,
     },
+    "calculate_returns": {
+        "description": (
+            "Calculate what a fixed investment amount would be worth today if "
+            "invested in each symbol a given number of years ago. Accepts multiple "
+            "year periods (e.g. [1, 2, 3]) and returns total return %, gain/loss, "
+            "and ending value per symbol per period. Uses live Yahoo Finance data."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "symbols": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Ticker symbols to calculate returns for, e.g. ['AAPL', 'SCHD'].",
+                },
+                "investment": {
+                    "type": "number",
+                    "description": "Dollar amount invested, e.g. 50000.",
+                },
+                "years": {
+                    "type": "array",
+                    "items": {"type": "integer"},
+                    "description": "List of lookback periods in years, e.g. [1, 2, 3] or [5].",
+                },
+            },
+            "required": ["symbols", "investment", "years"],
+        },
+        "handler": securities.calculate_returns,
+    },
     "compare_securities": {
         "description": (
             "Fetch expense ratio, dividend yield, and historical price performance "

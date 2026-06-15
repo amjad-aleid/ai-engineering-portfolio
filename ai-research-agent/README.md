@@ -8,6 +8,7 @@ An agent = a model + a set of tools + a loop where the model decides, on its own
 
 - **`screen_securities`** — screens stocks or ETFs by P/E ratio, dividend yield, expense ratio (ETFs), and historical growth, via [Yahoo Finance](https://finance.yahoo.com/) (`yfinance`) — no API key required
 - **`compare_securities`** — fetches expense ratio, dividend yield, and 1/3/5-year price performance for a list of specific symbols, for side-by-side comparison
+- **`calculate_returns`** — calculates what a fixed dollar investment would be worth today if made 1, 2, 3 (or any set of) years ago, across multiple symbols
 - **`search_github_repos`** / **`get_github_repo`** — searches and inspects GitHub repositories via the GitHub REST API
 
 You chat with it on the command line; it decides which tool(s) to call (if any) and reasons over the results to answer you.
@@ -22,6 +23,7 @@ agent.py ── chat.completions.create(tools=TOOL_SCHEMAS) ──> Groq (llama-
    │                                                              │
    │ <── tool_calls: screen_securities(...) ──────────────────────┤
    │ <── tool_calls: compare_securities(...) ───────────────────────┤
+   │ <── tool_calls: calculate_returns(...) ────────────────────────┤
    │ <── tool_calls: search_github_repos(...) ─────────────────────┘
    ▼
 tools/securities.py ──> Yahoo Finance (yfinance, no key)
@@ -88,6 +90,7 @@ Example prompts:
 - "Find ETFs with an expense ratio under 0.1% and a dividend yield over 2%"
 - "Compare AAPL, MSFT, and GOOGL on dividend yield and historical performance"
 - "Compare SPY, QQQ, and VOO on expense ratio and 5-year returns"
+- "If I invested $10,000 in AAPL, MSFT, and SCHD 1, 3, and 5 years ago, what would each be worth today?"
 - "Search GitHub for popular Python MCP server repositories"
 
 Each tool call the agent makes is printed (`[tool] name(args)`) before its result is fed back to the model, so you can see the agentic loop happening.
@@ -98,5 +101,6 @@ Each tool call the agent makes is printed (`[tool] name(args)`) before its resul
 |---|---|---|
 | `screen_securities` | `asset_type` ("stock"/"etf"), `sector?`, `max_pe?`, `min_dividend_yield?`, `max_expense_ratio?`, `min_historical_growth?`, `limit?` | Screens stocks/ETFs by P/E, dividend yield, expense ratio, and historical growth |
 | `compare_securities` | `symbols` (list of tickers) | Compares specific symbols on expense ratio, dividend yield, and 1/3/5-year price performance |
+| `calculate_returns` | `symbols`, `investment` ($), `years` (list of ints) | Calculates end value, gain/loss, and total return % for a fixed investment across multiple symbols and time periods |
 | `search_github_repos` | `query`, `language?`, `limit?` | Searches GitHub repositories by keyword |
 | `get_github_repo` | `owner`, `repo` | Gets stars, forks, issues, license, etc. for a repository |
